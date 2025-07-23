@@ -20,6 +20,10 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.utils import ImageReader
 
+# ============= НАСТРОЙКИ БОТА =============
+BOT_TOKEN = "7606009503:AAGY5Cdbhqc3nqJCtAidevTc69DGy63n-Z8"  # Токен из переменной окружения
+# ==========================================
+
 # Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -357,7 +361,12 @@ class FileConverterGUI:
         )
         tk.Label(info_frame, text=info_text, justify="left").pack(anchor="w")
         
-        self.log_message("Готов к запуску. Введите токен бота.")
+        self.log_message("Готов к запуску.")
+        
+        # Автозапуск бота если токен указан
+        if BOT_TOKEN != "YOUR_BOT_TOKEN_HERE":
+            self.token_entry.insert(0, BOT_TOKEN)
+            self.root.after(1000, self.start_bot)  # Автостарт через 1 секунду
     
     def log_message(self, message):
         """Добавление сообщения в лог"""
@@ -411,6 +420,21 @@ class FileConverterGUI:
         self.root.mainloop()
 
 if __name__ == "__main__":
-    # Создаем и запускаем GUI
-    app = FileConverterGUI()
-    app.run()
+    # Проверяем окружение
+    if os.getenv("RAILWAY_ENVIRONMENT"):
+        # Запуск на Railway без GUI
+        if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+            logger.error("❌ BOT_TOKEN не установлен! Добавьте переменную окружения BOT_TOKEN")
+            exit(1)
+        
+        logger.info("🚀 Запуск бота на Railway...")
+        bot = FileConverterBot(BOT_TOKEN)
+        bot.run_bot(BOT_TOKEN)
+    else:
+        # Локальный запуск с GUI
+        if BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
+            print("⚠️  Для локального запуска замените BOT_TOKEN на ваш токен")
+            print("📝 Или установите переменную окружения: export BOT_TOKEN=ваш_токен")
+        
+        app = FileConverterGUI()
+        app.run()
